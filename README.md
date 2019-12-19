@@ -2,7 +2,7 @@
 
 ## Welcome!
 
-This project contains companion code for BCI stabilization and example data for the paper "A stabilized brain-computer interface based on neural manifold alignment" by A. D. Degenhart, W. E. Bishop, E. R. Oby, E. C. Tyler-Kabara, S. M. Chase, A. P. Batista and B. M. Yu published in Nature Biomedical Engineering.
+This project contains companion code for BCI stabilization and example data for the paper "A stabilized brain-computer interface based on neural manifold alignment."
 
 ## Getting started with stabilization
 
