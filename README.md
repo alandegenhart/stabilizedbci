@@ -19,7 +19,7 @@ In addition to the two top-level example scripts, the core code is contained in 
 
 ## Description of the data
 
-Data from an example experiment (performed on 3/25/206) is saved in the data folder as a .mat file.  
+Data from an example experiment (performed on 3/25/2016) is saved in the data folder as a .mat file.  
 
 Note that in the code and documentation below an instability is often referred to as a "perturbation," and for this work the two terms can be used interchangeably. 
 
