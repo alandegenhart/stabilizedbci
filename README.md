@@ -9,7 +9,7 @@ This project contains companion code for BCI stabilization and example data for 
 The code for this project has been organized in a modular way to make it straightforward to apply stabilization to existing BCI decoders and to also demonstrate how stabilization was used with a Kalman filter, as reported in the original paper. The best place to get started is with the script 'stabilizationExample.m', which provides a 'bare-bones' example of how to apply stabilization to neural data.  This script is intended to help researchers who have an existing decoder they simply want to apply stabilization to.  The script 'stabilizedKalmanFilterExample.m' is provided to reproduce the closed-loop online results that were achieved with a stabilized Kalman filter, as reported in the original paper.  All the code to train a base Kalman filter and apply stabilization is demonstrated in this script.
 
 ## Organization of the code
-In addition to the two top-level example scripts, the core code is contained in 'code' folder, and is organized as follow:
+In addition to the two top-level example scripts, the core code is contained in a 'code' folder, and is organized as follow:
 
 - stabilization: This subfolder contains the core functions needed to apply stabilization to your own decoder.  The three main functions needed are 'fitBaseStabilizer.m' for fitting an initial stabilizer to neural data collected during a calibration session, 'updateStabilizer.m' for updating the stabilizer with neural data collected during normal BCI use and 'getStabilizationMatrices.m' for getting a set of matrices which can be applied to linearly extract stabilized neural signals.  The use of these functions are all demonstrated in the 'stabilizationExample.m' script mentioned above. 
 
