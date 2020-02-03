@@ -1,6 +1,7 @@
-function optsCellOut = assignOpts(optsCellIn)
-% This is a function that is based on code provided to Will Bishop
-% by the Shenoy lab at Stanford University during his time at JHU/APL. 
+% assignOpts Assign values for optional agruments to the workspace.
+% 
+% optsCellOut = assignOpts(optsCellIn) assigns variable-value pairs to the
+% workspace, returning any unassigned variables.
 %
 % It will accept a cell as input. It is expected the length of this cell 
 % will be even and will consist of pairs of entries.  The first entry in 
@@ -38,7 +39,12 @@ function optsCellOut = assignOpts(optsCellIn)
 %   optsCellOut - a cell of variable name - variable value pairs that were
 %   not found in the caller's workspace. 
 %
+% This function is based on code provided to Will Bishop
+% by the Shenoy lab at Stanford University.
+%
 % Author: William Bishop, bishopw@janelia.hhmi.org
+
+function optsCellOut = assignOpts(optsCellIn)
 
 lOptsCell = length(optsCellIn); 
 
