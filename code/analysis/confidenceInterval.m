@@ -1,17 +1,37 @@
+% confidenceInterval  Calculate confidence interval for data.
+%
+% This function calculates the confidence interval for the provided data.
+% Confidence intervals can be estimated using a t-distribution or by
+% resampling. When resampling is specified, random samples are drawn with
+% replacement from the input data.
+%
+% Usage:
+%   [ci] = confidenceInterval(x)
+%
+% Inputs:
+%   x       Input data array
+%
+% Optional inputs:
+%   alpha       Alpha value used to calculate the confidence interval
+%   method      Method used to calculate the confidence interval
+%               ('bootstrap' or 'tDist')
+%   statistic   String specifying the function name of the statistic to
+%               calculate the confidence for
+%   nRep        Number of repetitions to use (bootstrap method only)
+%
+% Outputs:
+%   ci          Confidence interval
+%
+% @ Alan Degenhart -- alan.degenhart@gmail.com
+
 function [ci] = confidenceInterval(x,varargin)
-% confidenceInterval        Calculate confidence interval for data
-%
-% [ci] = confidenceInterval(x)
-%
-% Plot confidence interval for the provided data.
-%
-%
 
 % Parse optional arguments
 alpha = 0.05;
 method = 'bootstrap';
 statistic = 'mean';
 nRep = 10000;
+
 assignOpts(varargin);
 
 % Reshape to 1 x samples and remove NaNs
