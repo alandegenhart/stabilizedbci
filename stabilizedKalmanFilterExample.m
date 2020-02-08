@@ -170,8 +170,7 @@ end
 
 %% ========================================================================
 % Now we go through and make sure the decode is close to the original for
-% all decoded trials - ALAN: This is where I'm thinking you can replace 
-% this code with code to produce the figure. 
+% all decoded trials
 %  ========================================================================
 trialDiffs = cell(1, nOrigTrials); 
 for tI = 1:nOrigTrials
