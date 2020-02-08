@@ -32,7 +32,10 @@
 %
 %   would cause this function to look for the variable named var1 in the
 %   caller's workspace and assign it value 1 if it was found.  Similiary,
-%   the variable 'var2' would be assigned 'cat' if it was found.  
+%   the variable 'var2' would be assigned 'cat' if it was found.
+%
+%   checkClass - flag indicating whether or not to check that the class of
+%   the assigned variable is the same as that of the workspace variable.
 %
 % Outputs: 
 %
@@ -44,7 +47,12 @@
 %
 % Author: William Bishop, bishopw@janelia.hhmi.org
 
-function optsCellOut = assignOpts(optsCellIn)
+function optsCellOut = assignOpts(optsCellIn, checkClass)
+
+% Determine if class check flag was specified
+if nargin == 1
+    checkClass = true;
+end
 
 lOptsCell = length(optsCellIn); 
 
@@ -70,10 +78,14 @@ for o = 1:nOpts
     if any(strcmpi(curVarName, callerVarNames))
         
         % Make sure we are not switching classes
-        curValClass = class(curVarVal);
-        existingValClass = evalin('caller', ['class(', curVarName, ')']); 
-        if ~(strcmp(curValClass, 'matlab.graphics.axis.Axes') || strcmp(curValClass, 'matlab.ui.container.Panel'))
-            assert(strcmpi(curValClass, existingValClass), ['Variable ', curVarName, ' must be of type ', existingValClass, '.']); 
+        if checkClass
+            curValClass = class(curVarVal);
+            existingValClass = evalin('caller', ['class(', curVarName, ')']); 
+            if ~(strcmp(curValClass, 'matlab.graphics.axis.Axes') || ...
+                    strcmp(curValClass, 'matlab.ui.container.Panel'))
+                assert(strcmpi(curValClass, existingValClass), ...
+                    ['Variable ', curVarName, ' must be of type ', existingValClass, '.']); 
+            end
         end
         % Assuming we passed the last assert, assign the new value
         assignin('caller', curVarName, curVarVal); 
