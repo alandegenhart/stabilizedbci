@@ -1,38 +1,31 @@
-% processTrialData Process trial data into blocks for subsequent analysis.
+% processTrialData  Process trial data into blocks for subsequent analysis.
 %
-% 
+% This function formats the provided session trial data into blocks
+% corresponding to distinct phases of an experimental session.
+%
+% Usage:
+%   [D] = processTrialData(trialData)
+%
+% Inputs:
+%   trialData   Structure array of data for individual trials
+%
+% Outputs:
+%   D           Structure array of data segmented into blocks
+%
+% @ Alan Degenhart -- alan.degenhart@gmail.com
 
-function [E,D] = processTrialData(trialData,varargin)
+function [D] = processTrialData(trialData)
 
-% Optional arguments
-saveFigs = false;
-saveLoc = [];
-saveData = false;
-baselineDecoderNum = [];
-plotPerformance = true;
-plotTrajectories = true;
-calcStatistics = true;
-plotStatistics = true;
-acqTimeOption = 'successOnly';
+% Constant parameters
 blockSize = 16;
-
-% Decoder numbers
 baselineDecoderNum = 10;
-
-
-% Parse optional arguments
-assignOpts(varargin);
 
 % Initialize matrices
 totalTrials = length(trialData);
 successCode = [trialData.success];
-acquireTime = ones(totalTrials,1) * 0.5;  % NOTE: Placeholder data
-
-% Convert target positions to a unique set of target codes. These are
-% useful for quickly grabbing all trials to a specific target.
-% NOTE: might not need to do this if it's easier just to plot targets by
-% unique positions.
-targetCode = ones(totalTrials, 1);  % NOTE: Placeholder data
+onsetTime = [trialData.cursorOnsetTime];
+offsetTime = [trialData.trialEndTime];
+acquireTime = double(offsetTime - onsetTime);
 
 % Identify decoder blocks. The decoder used was changed over the course of
 % the experiment. First identify contiguous blocks of trials with the same
@@ -42,7 +35,25 @@ targetCode = ones(totalTrials, 1);  % NOTE: Placeholder data
 % instabilities).
 decoderNum = [trialData.decoderInd];
 decoderNum(isnan(decoderNum)) = -1;  % Set ID for trials w/o a decoder
+
+% Identify post-baseline evaluation blocks. Trials were briefly stopped
+% after the baseline evaluation block for some sessions in order to select
+% an instability. Following selection of the instabiliy, ~32 trials were
+% run with the baseline decoder so that the animal was engaged in the task
+% when the instability was first applied. To allow these trials to be
+% separated out, give them a different decoder number.
+preInstDecoderNum = 100;
+baselineTrials = diff(decoderNum == baselineDecoderNum);
+baselineOnset = find(baselineTrials == 1, 1, 'first') + 1;
+baselineOffset = find(baselineTrials == -1, 1, 'first');
+decoderNum(baselineOnset + 128:baselineOffset) = preInstDecoderNum;
+
+% Find changes in decoder number. These indicate different 'blocks' of
+% trials to segment. Also reset the decoder number for the 'pre-instability
+% baseline' trials, as the actual decoder number needs to be correct for
+% subsequent analyses.
 blockOnsetIdx = find(diff(decoderNum) ~= 0) + 1;
+decoderNum(decoderNum == preInstDecoderNum) = baselineDecoderNum;
 blockDecoderInd = decoderNum(blockOnsetIdx);
 
 % Remove any blocks during decoder calibration. Decoder IDs 1-9 correspond
@@ -53,20 +64,6 @@ blockOnsetIdx = blockOnsetIdx(mask);
 blockDecoderInd = blockDecoderInd(mask);
 nDecoderBlocks = length(blockDecoderInd);
 
-% NOTE: One issue with the current data format is that the data is no
-% longer separated by directories. This was used for determining task
-% structure somewhat. The main issue here are the last 32 trials of with
-% the baseline decoder prior to the instability being introduced. In the
-% current data file, there is no way to tell when the end of the baseline
-% evaluation block was purely based on the trial data. In this case,
-% hard-code the baseline evaluation block to be the first 128 trials with
-% the baseline decoder.
-
-% TODO: temporarily block out the pre-instability baseline trials. Can set
-% these to have a different decoder ID, which should ensure that the below
-% code segments them appropriately.
-preInstDecoderNum = 100;
-
 % Iterate over blocks and get data for each trial. 
 D = repmat(defineBlockStructure(), nDecoderBlocks, 1);
 TDcell = cell(nDecoderBlocks,1);
@@ -76,13 +73,12 @@ for i = 1:nDecoderBlocks
     if i == nDecoderBlocks
         offset = totalTrials;
     else
-        offset = blockOnsetIdx(i+1);
+        offset = blockOnsetIdx(i+1) - 1;
     end
     
     % Get success code and acquisition time for current decoder
     decSuccessCode = successCode(onset:offset);
     decAcquireTime = acquireTime(onset:offset);
-    decTargetCode = targetCode(onset:offset);
     decTrials = length(decSuccessCode);
     
     % Loop over blocks and calculate success rate.  Note: if there is at
@@ -139,7 +135,6 @@ for i = 1:nDecoderBlocks
     D(i).decoderNum = decoderNum(onset);
     D(i).nTrials = length(decSuccessCode);
     D(i).TD = trialData(onset:offset);
-    D(i).targetCode = decTargetCode;
     D(i).successCode = decSuccessCode;
     D(i).acquireTime = decAcquireTime;
     D(i).successRate = sum(decSuccessCode)/D(i).nTrials;
@@ -167,7 +162,6 @@ stitchedDecoderNum = max(decoderNum);
 % the order was: (1) baseline, (2) pre-instability baseline, 
 % (3) stabilization, (4) stabilization evaluation, 
 % (5) instability evaluation, (6) baseline washout
-initPertInd = find(decoderNum == perturbedDecoderNum, 1, 'first');
 baselineEvalInd = find(decoderNum == baselineDecoderNum, 1, 'first');
 stitchingEvalInd = find(decoderNum == stitchedDecoderNum, 1, 'last');
 perturbationEvalInd = find(decoderNum == perturbedDecoderNum, 1, 'last');
@@ -208,6 +202,7 @@ end
 if ~isempty(preInstabilityInd)
     D(preInstabilityInd).blockNotes = 'Pre-instability Baseline';
     D(preInstabilityInd).highlightBlock = false;
+    D(preInstabilityInd).decoderNum = baselineDecoderNum;
 end
 
 % Set notes, evaluation, and highlight flags for stabilizer block
@@ -224,279 +219,6 @@ if ~isempty(stitchOffset)
         D(i).blockNotes = 'Stitching';
         D(i).evaluationBlock = false;
         D(i).highlightBlock = false;
-    end
-end
-
-% Plot performance
-if plotPerformance
-    plotSessionPerformance(D);
-end
-
-% Determine whether or not to calculate performance statistics.  For all
-% single-day experiments this should be done, but multi-day experiments
-% don't have the same block design.
-switch A.protocol
-    case{'C_1.0','D_1.0','E_1.0'}
-        calcStatistics = false;
-        plotTrajectories = false;
-end % Otherwise, use defaults (specified above)
-
-if plotTrajectories
-    % Plot trajectories
-    trajBlockInds.baselineEval = baselineEvalInd;
-    trajBlockInds.initPerturbation = initPertInd;
-    trajBlockInds.stitchingEval = stitchingEvalInd;
-    trajBlockInds.perturbationEval = perturbationEvalInd;
-    plotNeilsenTrajectories(TDcell,trajBlockInds,E,saveFigs,saveLoc);
-end
-
-% Plot average success rate and acquisition time
-if calcStatistics
-    % Get indices for evaluation blocks and number of trials per eval block.
-    % Also specify how many trials to discard at the beginning of each block --
-    % this prevents learning effects from influencing the results
-    evalInds = [baselineEvalInd stitchingEvalInd perturbationEvalInd baselineWashoutInd];
-    blockOffset = [0 0 0 0]; % How many trials to discard at the beginning of the block.
-    nEvalBlocks = length(evalInds);
-    evalTrials = nan(nEvalBlocks,1);
-    for i = 1:nEvalBlocks
-        evalTrials(i) = D(evalInds(i)).nTrials - blockOffset(i);
-    end
-    
-    % Baseline washout data typically lasted longer than 128 trials.  To
-    % keep analysis consistent with other blocks and to limit the effect of
-    % motivation, limit this block to 128 trials.  Also do the same for the
-    % baseline evaluation block in case it went longer than 128 trials.
-    maxEvalTrials = 128;
-    evalTrials(end) = min(evalTrials(end),maxEvalTrials);
-    
-    blockTrials = floor(evalTrials/blockSize) * blockSize;      % Number of trials to analyze (only analyze blocks)
-    successTrials = nan(nEvalBlocks,1);
-    successRateMean = nan(nEvalBlocks,1);
-    acquireTimeMean = nan(nEvalBlocks,1);
-    acquireTimeStd = nan(nEvalBlocks,1);
-    rewardRate = nan(nEvalBlocks,1);
-    successRateData = cell(nEvalBlocks,1);
-    acquireTimeDataSuccess = cell(nEvalBlocks,1);
-    acquireTimeDataAll = cell(nEvalBlocks,1);
-    targSR = cell(nEvalBlocks,1);
-    targAT = cell(nEvalBlocks,1);
-    targRR = cell(nEvalBlocks,1);
-    targATQuant = cell(nEvalBlocks,1);
-    blockNames = cell(nEvalBlocks,1);
-    nTrialsTotal = nan(nEvalBlocks,1);
-    nTrialsSuccess = nan(nEvalBlocks,1);
-
-    % Get data for stitching block
-    blockMask = ismember({D.blockNotes},'Stitching');
-    if ~isempty(blockMask)
-        % Get data and initialize matrices
-        Dtemp = D(blockMask);
-        nBlockTrials = length(Dtemp);
-        updateNum = nan(1,nBlockTrials);
-        nStitchingTrials = nan(1,nBlockTrials);     % Number of trials for each update
-        sr_block = nan(1,nBlockTrials);             % Success rate for each block
-        atAllMean_block = nan(1,nBlockTrials);      % Avg acquisition time for each block (all trials)
-        atSuccessMean_block = nan(1,nBlockTrials);  % Avg acquisition time for each block (suc trials)
-        tar_block = nan(1,nBlockTrials);            % Target acquisition rate
-        
-        % Loop over unique decoders and get data
-        for i = 1:nBlockTrials
-            % Get data for current block
-            successCodeTemp = Dtemp(i).successCode';
-            acquireTimeTemp = Dtemp(i).acquireTime';
-            nStitchingTrials(i) = length(successCodeTemp);
-            scMask = logical(successCodeTemp);
-            
-            % Put transposed data back into decoder structure array -- this
-            % allows the success code and trial data to be easily
-            % concatenated across all trials
-            Dtemp(i).updateNum = ones(1,length(Dtemp(i).successCode)) * ...
-                Dtemp(i).decoderNum;
-            Dtemp(i).successCode = successCodeTemp;
-            Dtemp(i).acquireTime = acquireTimeTemp;
-            
-            % Calculate stitching block performance metrics.  Compared to
-            % normal 'block' metrics, stitching block metrics are
-            % calculated for *each* stabilized decoder
-            sr_block(i) = sum(successCodeTemp)/nStitchingTrials(i);
-            atAllMean_block(i) = mean(acquireTimeTemp);
-            atSuccessMean_block(i) = mean(acquireTimeTemp(scMask));
-            tar_block(i) = sum(successCodeTemp)/sum(acquireTimeTemp);
-        end
-        % Get data for each trial in the stitching block
-        stitchingUpdateNum = [Dtemp.updateNum];
-        stitchingUpdateNum = stitchingUpdateNum - stitchingUpdateNum(1);
-        successRateStitching = [Dtemp.successCode];
-        acquireTimeStitching = [Dtemp.acquireTime];
-        blockSuccessRateStitching = sr_block;
-        switch acqTimeOption
-            case 'successOnly'
-                blockAcquireTimeStitching = atSuccessMean_block;
-            case 'allTrials'
-                blockAcquireTimeStitching = atAllMean_block;
-        end
-        blockTrialsStitching = nStitchingTrials;
-        blockRewardRateStitching = tar_block;
-    else
-        successRateStitching = [];
-        acquireTimeStitching = [];
-        blockSuccessRateStitching = [];
-        blockAcquireTimeStitching = [];
-        blockRewardRateStitching = [];
-    end
-    
-    % Loop over blocks to get data for evaluation blocks
-    for i = 1:nEvalBlocks
-        % Get success rate data, acquisition time data, and indices to analyze
-        blockInd = evalInds(i);
-        onset = blockOffset(i) + 1;
-        
-        % Updated 2017.11.17
-        % Change the block data to use all trials for the evaluation blocks
-        % instead of limiting things to blocks of 16 trials.  We should use
-        % all available data when calculating performance metrics.
-        
-        %offset = onset + blockTrials(i) - 1;
-        offset = onset + evalTrials(i) - 1; % Instead of 'blockTrials'
-        
-        successCodeTemp = D(blockInd).successCode(onset:offset);
-        acquireTimeAllTemp = D(blockInd).acquireTime(onset:offset);
-
-        % Calculate success rate
-        successTrials(i) = sum(successCodeTemp);
-        nTrialsTotal(i) = length(successCodeTemp);
-        successRateData{i} = successCodeTemp;
-        successRateMean(i) = mean(successCodeTemp);
-
-        % Calculate reward rate
-        rewardRate(i) = successTrials(i)/sum(acquireTimeAllTemp);
-        
-        % Calculate acquire time -- use successful trials ONLY
-         % Select acquisition time data to calculate block average
-        switch acqTimeOption
-            case 'successOnly'
-                acquireTimeTemp = acquireTimeAllTemp(logical(successCodeTemp));
-            case 'allTrials'
-                acquireTimeTemp = acquireTimeAllTemp;
-            otherwise
-                error('Incorrect acquisition time option specified.')
-        end
-        nTrialsSuccess(i) = sum(successCodeTemp);
-        acquireTimeDataAll{i} = acquireTimeAllTemp;
-        acquireTimeDataSuccess{i} = acquireTimeAllTemp(logical(successCodeTemp));
-        acquireTimeMean(i) = mean(acquireTimeTemp);
-        acquireTimeStd(i) = std(acquireTimeTemp);
-
-        % Calculate success rate and acquisition time by target
-        tC = D(blockInd).targetCode(onset:offset);
-        uniTC = unique(tC);
-        nTarg = length(uniTC);
-        targSuccRate = nan(nTarg,1);        % Success rate
-        targAcqTime = nan(nTarg,1);         % Mean acquisition time
-        targRewardRate = nan(nTarg,1);
-        q = [.25 .5 .75];                   % Quantiles to analyze
-        targAcqTimeQuant = nan(nTarg,3);    % Acquisition time quantiles
-        for j = 1:nTarg
-            % Get mask for current target
-            targMask = (tC == uniTC(j));
-            aTMask = targMask(logical(successCodeTemp));
-            tempSR = successCodeTemp(targMask);
-            tempAT = acquireTimeAllTemp(targMask);
-            targRewardRate(j) = sum(tempSR)/sum(tempAT);
-            tempAT = acquireTimeTemp(aTMask);
-            targSuccRate(j) = nanmean(tempSR);
-            targAcqTime(j) = nanmean(tempAT);
-            targAcqTimeQuant(j,:) = quantile(tempAT,q);
-        end
-        targSR{i} = targSuccRate;
-        targAT{i} = targAcqTime;
-        targRR{i} = targRewardRate;
-        targATQuant{i} = targAcqTimeQuant;
-        
-        % Get block names
-        blockNames{i} = D(blockInd).blockNotes;
-    end
-
-    % Calculate success rate statistics
-    pValsSuccessRate = ones(nEvalBlocks);
-    for i = 1:nEvalBlocks
-        for j = (i+1):nEvalBlocks
-            N1 = blockTrials(i); % Number of trials
-            N2 = blockTrials(j);
-            M1 = successTrials(i); % Number of successful trials
-            M2 = successTrials(j);
-            p = binomialTest(M1,N1,M2,N2);
-            pValsSuccessRate(i,j) = p;
-        end
-    end
-
-    % Calculate acquisition time statistics
-    pValsAcquireTime = ones(nEvalBlocks);
-    for i = 1:nEvalBlocks
-        for j = (i+1):nEvalBlocks
-            a1 = acquireTimeDataSuccess{i};
-            a2 = acquireTimeDataSuccess{j};
-            [~,p] = ttest2(a1,a2);
-            pValsAcquireTime(i,j) = p;
-        end
-    end
-
-    % Pack up data for evaluation blocks
-    E.nEvalBlocks = nEvalBlocks;
-    E.nTrialsTotal = nTrialsTotal;
-    E.nTrialsSuccess = nTrialsSuccess;
-    E.successRateData = successRateData;
-    E.successRateMean = successRateMean;
-    E.acquireTimeDataAll = acquireTimeDataAll;
-    E.acquireTimeDataSuccess = acquireTimeDataSuccess;
-    E.acquireTimeMean = acquireTimeMean;
-    E.acquireTimeStd = acquireTimeStd;
-    E.rewardRate = rewardRate;
-    E.targetSuccessRate = targSR;
-    E.targetAcquireTime = targAT;
-    E.targetRewardRate = targRR;
-    E.targetAcquireTimeQuant = targATQuant;
-    E.pValsSuccessRate = pValsSuccessRate;
-    E.pValsAcquireTime = pValsAcquireTime;
-    E.blockNames = blockNames;
-    
-    % Pack up data for stitching
-    E.stitchingUpdateNum = stitchingUpdateNum;
-    E.successRateStitching = successRateStitching;
-    E.acquireTimeStitching = acquireTimeStitching;
-    E.blockTrialsStitching = blockTrialsStitching;
-    E.blockSuccessRateStitching = blockSuccessRateStitching;
-    E.blockAcquireTimeStitching = blockAcquireTimeStitching;
-    E.blockRewardRateStitching = blockRewardRateStitching;
-
-    if plotStatistics
-        plotStitchingStatistics(E,saveFigs,saveLoc)
-    end
-
-    % Determine Perturbation type
-    isOffset = E.pertParams.nOffsetChs > 0;
-    isSilent = E.pertParams.nSilentChs > 0;
-    isSwap = E.pertParams.nSwapChs > 0;
-
-    if isOffset && ~(isSilent || isSwap)
-        pertType = 'offset';
-    elseif isSilent && ~(isOffset || isSwap)
-        pertType = 'silence';
-    elseif isSwap && ~(isSilent || isOffset)
-        pertType = 'swap';
-    elseif ~(isOffset || isSilent || isSwap)
-        pertType = 'control';
-    else
-        pertType = 'multiple';
-    end
-    E.pertType = pertType;
-
-    % Save experiment meta data
-    if saveData
-        saveLoc = [E.dataLocBase '/ExperimentData/' E.subject E.dataset ...
-            '_ExperimentData.mat'];
-        save(saveLoc,'E')
     end
 end
 
