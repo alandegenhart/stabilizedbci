@@ -1,7 +1,9 @@
 % This script replicates the main analysis used to create Figure 4 of the
 % manuscript.
+%
+% @ Alan Degenhart -- alan.degenhart@gmail.com
 
-%%  =======================================================================
+%% ========================================================================
 % Add the required paths to use the stabilization code
 startDir = pwd;
 cd('code'); 
@@ -14,17 +16,14 @@ cd(startDir);
 dataFile = fullfile('data', '20160325');
 data = load(dataFile); 
 
-%% =======================================================================
+%% ========================================================================
 % Create plots summarizing performance
 
-% Process trial data
-processTrialData(data.trialData)
+% Process trial data and print session summary statistics
+D = processTrialData(data.trialData);
+calculatePerformanceStatistics(D)
 
-% Analysis:
-% - Main function to calculate success rate/target acquisition rate as a
-% function of target block
-% - Summarize overal stabilization performance for the session
-
-% Plots to generate:
-% - Performance vs block (Fig. 4b)
-% - Trajectories for individual blocks (Fig. 4c)
+% Plot session performance (Fig. 4b)
+[F1] = plotSessionPerformance(D, 'Example session - L20160325');
+% Plot cursor trajectories (Fig. 4c)
+[F2] = plotCursorTrajectories(D, 'Example session trajectories - L20160325');
