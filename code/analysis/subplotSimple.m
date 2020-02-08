@@ -1,22 +1,33 @@
-function AX = subplotSimple(nRow,nCol,plotNo,varargin)
-% [AX] = subplotSimple(nRow,nCol,plotNo)
-%
-% Generate subplot with no whitespace.
+% subplotSimple  Generate subplot with specific sizing.
 %
 % This function replicates the functionality of the 'subplot' command, but
-% generates plots with no whitespace (i.e., there is no distance between
-% plots).
+% allows for additional functionality. In particular, the optional argument
+% 'Ax' can be used in order to automatically determine the subplot location
+% based on those retured by the 'calcFigureSize' function.
+%
+% Usage:
+%   [h] = subplotSimple(nRow, nCol, plotNo)
 %
 % Inputs:
 %   nRow    Number of rows
 %   nCol    Number of columns
+%   plotNo  Current plot number
+%
+% Optional inputs:
+%   Ax      Axis structure returned by calcFigureSize
+%   xMarg   Array containing left and right margins (ignored if Ax is
+%           specified)
+%   yMarg   Array containing bottom and top margins (ignored if Ax is
+%           specified)
+%   xSpace  Inter-plot x-spacing (ignored if Ax is specified)
+%   ySpace  Inter-plot y-spacing (ignored if Ax is specified)
 %
 % Outputs:
-%   AX      Axes handle
+%    h      Axis handle
 %
-% Author:       Alan D. Degenhart
-% Date Created: 2016.05.21
-% Last Updated: 2016.05.21
+% @ Alan Degenhart -- alan.degenhart@gmail.com
+
+function [h] = subplotSimple(nRow, nCol, plotNo, varargin)
 
 % Optional arguments
 Ax = struct();
@@ -30,8 +41,8 @@ assignOpts(varargin);
 
 % If 'Ax' structure is provided as an input, set values accordingly
 if ~isempty(Ax)
-    xMarg = [Ax.xMarg Ax.xMarg];
-    yMarg = [Ax.yMarg Ax.yMarg];
+    xMarg = Ax.xMarg;
+    yMarg = Ax.yMarg;
     xSpace = Ax.xSp;
     ySpace = Ax.ySp;
 end
@@ -78,10 +89,4 @@ w = xPosEdge - xPosStart;
 h = yPosEdge - yPosStart;
 
 % Creat plot
-AX = subplot('Position',[xPosStart,yPosStart,w,h]);
-
-% if colIdx == 0 % Handle case for the last column (remainder is 0)
-%     colIdx = nCol;
-% end
-% % Creat plot
-% AX = subplot('Position',[xPos(colIdx),yPos(rowIdx),w,h]);
+h = subplot('Position',[xPosStart,yPosStart,w,h]);
