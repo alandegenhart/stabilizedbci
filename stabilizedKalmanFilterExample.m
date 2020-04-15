@@ -58,7 +58,7 @@ for tI = 1:nTrainTrials
 end
 
 % Train the baseline decoder - note in practice C_INIT and PSI_INIT would
-% note be used; here we use them to ensure we start the EM algorithm for
+% not be used; here we use them to ensure we start the EM algorithm for
 % fitting stabilizer from the same initial conditions they were started
 % from in the closed-loop work; this is to ensure reproducability in 
 % this script, but in practice these optional inputs can be omitted,
@@ -179,4 +179,5 @@ for tI = 1:nOrigTrials
     end
 end
 trialErs = cellfun(@(x) mean(mean(x.^2)), trialDiffs);
+figure;
 plot(trialErs)

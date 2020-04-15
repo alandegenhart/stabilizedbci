@@ -33,8 +33,9 @@ function [d, c, psi, conv, diags] = fitFA(x, nLatents, varargin)
 %   Default: 1E-8.
 %
 %   MIN_PRIV_VAR - After the M-step of each fitting iteration, we can
-%   enfore that the private variance values (the diagonal values along psi)
-%   are all above a certain threshold.  MIN_PRIV_VAR gives this threshold. 
+%   enforce that the private variance values (the diagonal values along psi
+%   ) are all above a certain threshold.  MIN_PRIV_VAR gives this 
+%   threshold. 
 %   Default: .01
 %
 %   C_INIT - If provided, the initial value of C to start EM with.  If
