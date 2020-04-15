@@ -34,7 +34,7 @@ The .mat file containing the data contains the following fields:
 	- `id`: The id of each trial.
 	- `success`: True if the trial was a success.
 	- `freezeOnsetTime`: The onset time (in ms) of the "freeze" period of the trial, where the cursor position was not updated.
-	- `freezeOffsetTime`: The time point in the trial where cursor position updates began.
+	- `cursorOnsetTime`: The time point in the trial where cursor position updates began.
 	- `trialEndTime`: Time point when the trial ended.
 	- `time`: Times corresponding to spike count/decoded position updates.
 	- `binCounts`: The binned counts for the trial of shape electrodes x time_steps; these are the raw counts as recorded from all electrodes on the array; note that not all of these electrodes were good, so some of them were not used (see goodElectrodes below). 
