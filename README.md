@@ -33,6 +33,10 @@ The .mat file containing the data contains the following fields:
 - `trialData`: a structure of length T, where T is the number of trials.  It will have the following fields: 
 	- `id`: The id of each trial.
 	- `success`: True if the trial was a success.
+	- `freezeOnsetTime`: The onset time (in ms) of the "freeze" period of the trial, where the cursor position was not updated.
+	- `freezeOffsetTime`: The time point in the trial where cursor position updates began.
+	- `trialEndTime`: Time point when the trial ended.
+	- `time`: Times corresponding to spike count/decoded position updates.
 	- `binCounts`: The binned counts for the trial of shape electrodes x time_steps; these are the raw counts as recorded from all electrodes on the array; note that not all of these electrodes were good, so some of them were not used (see goodElectrodes below). 
 	- `refPos`: The position of the cursor at the start of the bin.
 	- `tgtPos`: The position of the target.
@@ -42,7 +46,7 @@ The .mat file containing the data contains the following fields:
 	- `trainKinematics`: kinematics used for initial calibration.
 	- `type`: The type of trial, which will be one of the following strings:
 		- `observation`: Initial trials in which the monkey watched but had no control over the movement of the cursor; these are the first calibration trials. 
-		- `gradualTrian`: Trials when we were initially training the decoder in a supervised manner; these are still calibration trials. 
+		- `gradualTrain`: Trials when we were initially training the decoder in a supervised manner; these are still calibration trials. 
 		- `baselineEvaluation`: Trials when the fully trained intuitive decoder was used and no perturbation was applied. This is the start of normal BCI use. 
 		- `perturbationEvaluation`: trials where the baseline decoder was used to decode and a perturbation was applied.
 		- `stabilizationPerturbation`: the first trials after we have applied the perturbation and stabilization is running but the stabilizer has not been updated yet.
