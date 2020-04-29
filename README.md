@@ -1,8 +1,12 @@
-# Stabilized BCI
+# Stabilization of a brain–computer interface via the alignment of low-dimensional spaces of neural activity
 
 ## Welcome!
 
-This project contains companion code for BCI stabilization and example data for the paper "A stabilized brain-computer interface based on neural manifold alignment."
+This project contains companion code for BCI stabilization and example data for the paper "Stabilization of a brain-computer interface via the alignment of low-dimensional spaces of neural activity."
+
+Degenhart, A.D.^, Bishop, W.E.^, Oby, E.R., Tyler-Kabara E.C, Chase S.M\*, Batista A.P\*, Yu B.M\*. Stabilization of a brain–computer interface via the alignment of low-dimensional spaces of neural activity. Nat Biomed Eng (2020). <https://doi.org/10.1038/s41551-020-0542-9>
+
+Thanks to Adam Smoulder and Angelica Herrera for their helpful feedback on the codepack.
 
 ## Getting started with stabilization
 
