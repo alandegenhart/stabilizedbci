@@ -68,5 +68,5 @@ The .mat file containing the data contains the following fields:
 
 ## Getting help
 
-For questions, please contact William Bishop at <wbishop@janelia.hhmi.org> or Alan Degenhart at <alandegenhart@cmu.edu>.
+For questions, please contact William Bishop at <wbishop@janelia.hhmi.org> or Alan Degenhart at <alandegenhart@gmail.com>.
 
